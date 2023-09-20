@@ -7,16 +7,21 @@ import io.jsonwebtoken.JwtBuilder
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import kong.unirest.Unirest
+import org.springframework.http.*
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriComponentsBuilder
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
 
 @RestController
-class Controller {
+class Controller (
+    val restTemplate: RestTemplate
+){
     @PostMapping("/signalr/negotiate")
     fun negotiate(): SignalRConnectionInfo {
         val signalRServiceBaseEndpoint = "mwaytrial.service.signalr.net"
@@ -33,18 +38,33 @@ class Controller {
     }
 
     @PostMapping("/api/messages")
-    fun sendMessage(@RequestBody message : ChatMessage) {
+    fun sendMessage(@RequestBody message : ChatMessage): HttpStatusCode {
+
+        val scheme = "https"
         val signalRServiceBaseEndpoint = "mwaytrial.service.signalr.net"
         val hubName = "notification"
 
-        val hubUrl = "$signalRServiceBaseEndpoint/api/v1/hubs/$hubName"
-        val accessKey : String  = generateJwt(hubUrl, null)
+        val hubUrl = UriComponentsBuilder.newInstance()
+            .scheme(scheme)
+            .host(signalRServiceBaseEndpoint)
+            .path("/api/v1/hubs/$hubName")
+            .toUriString()
 
-        Unirest.post(hubUrl)
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer $accessKey")
-            .body(SignalRMessage("newMessage", listOf(message)))
-            .asEmpty()
+        val accessKey : String  = generateJwt(hubUrl, "12345")
+
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        headers.set("Authorization", "Bearer $accessKey")
+
+        val signalRMessage = SignalRMessage("newMessage", listOf(message))
+        val requestEntity = HttpEntity(signalRMessage, headers)
+
+        return restTemplate.exchange(
+            hubUrl,
+            HttpMethod.POST,
+            requestEntity,
+            Void::class.java
+        ).statusCode
     }
 
     private fun generateJwt(audience: String, userId: String?): String {
