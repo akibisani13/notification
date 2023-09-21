@@ -47,7 +47,7 @@ class Controller (
     ): HttpStatusCode
     {
         val scheme = "https"
-        val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
+        val signalRServiceBaseEndpoint = "mwaytrial.service.signalr.net"
         val hubName = "notification"
 
         val hubUrl = UriComponentsBuilder.newInstance()

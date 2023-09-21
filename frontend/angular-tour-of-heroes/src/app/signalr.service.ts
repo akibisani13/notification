@@ -8,10 +8,11 @@ import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 export class SignalRService {
   private hubConnection!: HubConnection;
 
-  startConnection = () => {
-    const myCustomParameter = "someValue";
+  startConnection = (Id: any) => {
+    const userId = Id;
+    console.log('eeeeeeeeee',userId)
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`http://localhost:8080/signalr?customParam=${myCustomParameter}`)
+      .withUrl(`http://localhost:8080/signalr?userId=${userId}`)
       .withAutomaticReconnect()
       .build();
 

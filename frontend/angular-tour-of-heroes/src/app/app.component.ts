@@ -8,9 +8,14 @@ import { SignalRService } from './signalr.service';
 })
 export class AppComponent implements OnInit {
   title = 'angular-tour-of-heroes';
+  usedId: any;
   constructor(private signalRService: SignalRService) {}
   ngOnInit(): void {
-    this.signalRService.startConnection();
+  
+  }
+
+  notification(userId: any): void {
+    this.signalRService.startConnection(userId);
     this.signalRService.addTransferChartDataListener();
   }
 }
