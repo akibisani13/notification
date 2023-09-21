@@ -9,9 +9,9 @@ export class SignalRService {
   private hubConnection!: HubConnection;
 
   startConnection = () => {
+    const myCustomParameter = "someValue";
     this.hubConnection = new signalR.HubConnectionBuilder()
-
-      .withUrl('http://localhost:8080/signalr')
+      .withUrl(`http://localhost:8080/signalr?customParam=${myCustomParameter}`)
       .withAutomaticReconnect()
       .build();
 
@@ -22,7 +22,7 @@ export class SignalRService {
   };
 
   addTransferChartDataListener = () => {
-    this.hubConnection.on('transferChartData', (data) => {
+    this.hubConnection.on('newMessage', (data) => {
       console.log(data);
     });
   };
