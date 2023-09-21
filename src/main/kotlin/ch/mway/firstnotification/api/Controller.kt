@@ -45,8 +45,61 @@ class Controller(private val restTemplate: RestTemplate) {
         @RequestParam("userId") userId: String,
         @RequestBody message: ChatMessage): HttpStatusCode
     {
-        val hubUrl = "$SIGNALR_SERVICE_BASE_ENDPOINT/api/v1/hubs/$HUB_NAME"
+        val hubUrl = "$SIGNALR_SERVICE_BASE_ENDPOINT/api/v1/hubs/$HUB_NAME/users/$userId"
         val accessKey = generateJwt(hubUrl, userId)
+
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        headers.set("Authorization", "Bearer $accessKey")
+
+        val signalRMessage = SignalRMessage("newMessage", listOf(message))
+        val requestEntity = HttpEntity(signalRMessage, headers)
+
+        return try {
+            restTemplate.exchange(
+                hubUrl,
+                HttpMethod.POST,
+                requestEntity,
+                Void::class.java
+            ).statusCode
+        } catch (e: Exception) {
+            HttpStatus.INTERNAL_SERVER_ERROR
+        }
+    }
+
+    @PostMapping("/api/adduser")
+    fun addUser(
+        @RequestParam("userId") userId: String,
+        @RequestParam("groupName") groupName: String
+    ): HttpStatusCode {
+        val hubUrl = "$SIGNALR_SERVICE_BASE_ENDPOINT/api/v1/hubs/$HUB_NAME/groups/$groupName/users/$userId"
+        val accessKey = generateJwt(hubUrl, userId)
+
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        headers.set("Authorization", "Bearer $accessKey")
+
+        val requestEntity = HttpEntity(null ,headers)
+
+        return try {
+            restTemplate.exchange(
+                hubUrl,
+                HttpMethod.PUT,
+                requestEntity,
+                Void::class.java
+            ).statusCode
+        } catch (e: Exception) {
+            HttpStatus.INTERNAL_SERVER_ERROR
+        }
+    }
+
+    @PostMapping("/api/groupmsgs")
+    fun sendGroupMessage(
+        @RequestParam("groupName") groupName: String,
+        @RequestBody message: ChatMessage): HttpStatusCode
+    {
+        val hubUrl = "$SIGNALR_SERVICE_BASE_ENDPOINT/api/v1/hubs/$HUB_NAME/groups/$groupName"
+        val accessKey = generateJwt(hubUrl, null)
 
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
