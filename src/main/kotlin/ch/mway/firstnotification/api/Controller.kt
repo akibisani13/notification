@@ -11,6 +11,7 @@ import org.springframework.http.*
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
@@ -23,9 +24,9 @@ import javax.crypto.spec.SecretKeySpec
 class Controller (
     val restTemplate: RestTemplate
 ){
-    @PostMapping("/signalr/negotiate/{userId}")
+    @PostMapping("/signalr/negotiate")
     fun negotiate(
-        @PathVariable ("userId") userId : String
+        @RequestParam ("userId") userId: String,
     ): SignalRConnectionInfo
     {
         val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
@@ -40,9 +41,9 @@ class Controller (
         return signalRConnectionInfo
     }
 
-    @PostMapping("/api/messages/{userId}")
+    @PostMapping("/api/messages")
     fun sendMessage(
-        @PathVariable userId: String,
+        @RequestParam ("userId") userId: String,
         @RequestBody message : ChatMessage
     ): HttpStatusCode
     {
