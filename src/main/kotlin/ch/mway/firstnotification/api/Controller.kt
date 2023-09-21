@@ -24,7 +24,7 @@ class Controller (
 ){
     @PostMapping("/signalr/negotiate")
     fun negotiate(): SignalRConnectionInfo {
-        val signalRServiceBaseEndpoint = "mwaytrial.service.signalr.net"
+        val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
         val hubName = "notification"
         val userId = "12345"
         val hubUrl = "$signalRServiceBaseEndpoint/client/?hub=$hubName"
@@ -41,7 +41,7 @@ class Controller (
     fun sendMessage(@RequestBody message : ChatMessage): HttpStatusCode {
 
         val scheme = "https"
-        val signalRServiceBaseEndpoint = "mwaytrial.service.signalr.net"
+        val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
         val hubName = "notification"
 
         val hubUrl = UriComponentsBuilder.newInstance()
