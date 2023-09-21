@@ -1,5 +1,9 @@
 <div>
-  <input type="text" [(ngModel)]="usedId"/>
+  <input type="text" [(ngModel)]="usedId" />
   <button type="submit" (click)="notification(usedId)">submit</button>
-  <p>{{usedId}}</p>
+  <div *ngIf="notifications.length">
+  <div *ngFor="let item of notifications">
+    <p>{{item?.sender}} , {{item?.text}}</p>
+  </div>
+</div>
 </div>

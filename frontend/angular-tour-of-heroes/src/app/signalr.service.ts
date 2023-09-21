@@ -1,16 +1,18 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SignalRService {
   private hubConnection!: HubConnection;
+  private dataSubject = new Subject<any>();
+  data$ = this.dataSubject.asObservable();
 
   startConnection = (Id: any) => {
     const userId = Id;
-    console.log('eeeeeeeeee',userId)
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`http://localhost:8080/signalr?userId=${userId}`)
       .withAutomaticReconnect()
@@ -24,7 +26,7 @@ export class SignalRService {
 
   addTransferChartDataListener = () => {
     this.hubConnection.on('newMessage', (data) => {
-      console.log(data);
+      this.dataSubject.next(data);
     });
-  };
+  }
 }
