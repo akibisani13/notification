@@ -57,7 +57,7 @@ class Controller (
             .path("/api/v1/hubs/$hubName")
             .toUriString()
 
-        val accessKey : String  = generateJwt(hubUrl, "12345")
+        val accessKey : String  = generateJwt(hubUrl, userId)
 
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
