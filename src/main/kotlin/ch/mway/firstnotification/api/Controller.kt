@@ -8,6 +8,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import kong.unirest.Unirest
 import org.springframework.http.*
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -22,11 +23,13 @@ import javax.crypto.spec.SecretKeySpec
 class Controller (
     val restTemplate: RestTemplate
 ){
-    @PostMapping("/signalr/negotiate")
-    fun negotiate(): SignalRConnectionInfo {
+    @PostMapping("/signalr/negotiate/{userId}")
+    fun negotiate(
+        @PathVariable ("userId") userId : String
+    ): SignalRConnectionInfo
+    {
         val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
         val hubName = "notification"
-        val userId = "12345"
         val hubUrl = "$signalRServiceBaseEndpoint/client/?hub=$hubName"
         val accessKey: String = generateJwt(hubUrl, userId)
 
@@ -37,9 +40,12 @@ class Controller (
         return signalRConnectionInfo
     }
 
-    @PostMapping("/api/messages")
-    fun sendMessage(@RequestBody message : ChatMessage): HttpStatusCode {
-
+    @PostMapping("/api/messages/{userId}")
+    fun sendMessage(
+        @PathVariable userId: String,
+        @RequestBody message : ChatMessage
+    ): HttpStatusCode
+    {
         val scheme = "https"
         val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
         val hubName = "notification"
