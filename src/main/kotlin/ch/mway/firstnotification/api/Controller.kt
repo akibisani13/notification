@@ -6,33 +6,32 @@ import com.microsoft.azure.functions.signalr.SignalRMessage
 import io.jsonwebtoken.JwtBuilder
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import kong.unirest.Unirest
 import org.springframework.http.*
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.util.UriComponentsBuilder
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
 
 @RestController
-class Controller (
-    val restTemplate: RestTemplate
-){
+class Controller(private val restTemplate: RestTemplate) {
+    companion object {
+        const val SIGNALR_SERVICE_BASE_ENDPOINT = "https://mwaytrial.service.signalr.net"
+        const val HUB_NAME = "notification"
+        const val SIGNALR_SERVICE_KEY = "9tFdHphXIZFBWw+2jDW+t5Mqm87ZNrevECe7BSN8wUM="
+    }
+
     @PostMapping("/signalr/negotiate")
     fun negotiate(
-        @RequestParam ("userId") userId: String,
+        @RequestParam("userId") userId: String
     ): SignalRConnectionInfo
     {
-        val signalRServiceBaseEndpoint = "https://mwaytrial.service.signalr.net"
-        val hubName = "notification"
-        val hubUrl = "$signalRServiceBaseEndpoint/client/?hub=$hubName"
-        val accessKey: String = generateJwt(hubUrl, userId)
+        val hubUrl = "$SIGNALR_SERVICE_BASE_ENDPOINT/client/?hub=$HUB_NAME"
+        val accessKey = generateJwt(hubUrl, userId)
 
         val signalRConnectionInfo = SignalRConnectionInfo()
         signalRConnectionInfo.url = hubUrl
@@ -43,21 +42,11 @@ class Controller (
 
     @PostMapping("/api/messages")
     fun sendMessage(
-        @RequestParam ("userId") userId: String,
-        @RequestBody message : ChatMessage
-    ): HttpStatusCode
+        @RequestParam("userId") userId: String,
+        @RequestBody message: ChatMessage): HttpStatusCode
     {
-        val scheme = "https"
-        val signalRServiceBaseEndpoint = "mwaytrial.service.signalr.net"
-        val hubName = "notification"
-
-        val hubUrl = UriComponentsBuilder.newInstance()
-            .scheme(scheme)
-            .host(signalRServiceBaseEndpoint)
-            .path("/api/v1/hubs/$hubName")
-            .toUriString()
-
-        val accessKey : String  = generateJwt(hubUrl, userId)
+        val hubUrl = "$SIGNALR_SERVICE_BASE_ENDPOINT/api/v1/hubs/$HUB_NAME"
+        val accessKey = generateJwt(hubUrl, userId)
 
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
@@ -66,25 +55,29 @@ class Controller (
         val signalRMessage = SignalRMessage("newMessage", listOf(message))
         val requestEntity = HttpEntity(signalRMessage, headers)
 
-        return restTemplate.exchange(
-            hubUrl,
-            HttpMethod.POST,
-            requestEntity,
-            Void::class.java
-        ).statusCode
+        return try {
+            restTemplate.exchange(
+                hubUrl,
+                HttpMethod.POST,
+                requestEntity,
+                Void::class.java
+            ).statusCode
+        } catch (e: Exception) {
+            HttpStatus.INTERNAL_SERVER_ERROR
+        }
     }
 
     private fun generateJwt(audience: String, userId: String?): String {
-
-        val signalRServiceKey = "9tFdHphXIZFBWw+2jDW+t5Mqm87ZNrevECe7BSN8wUM="
         val nowMillis = System.currentTimeMillis()
         val now = Date(nowMillis)
         val expMillis = nowMillis + 30 * 60 * 1000
         val exp = Date(expMillis)
 
-        val apiKeySecretBytes = signalRServiceKey.byteInputStream(StandardCharsets.UTF_8).readBytes()
-        val signatureAlgorithm: SignatureAlgorithm = SignatureAlgorithm.HS256
-        val signingKey = SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.jcaName)
+        val apiKeySecretBytes = SIGNALR_SERVICE_KEY.toByteArray(StandardCharsets.UTF_8)
+        val signingKey = SecretKeySpec(
+            apiKeySecretBytes,
+            SignatureAlgorithm.HS256.jcaName
+        )
 
         val builder: JwtBuilder = Jwts.builder()
             .setAudience(audience)
@@ -92,9 +85,8 @@ class Controller (
             .setExpiration(exp)
             .signWith(signingKey)
 
-        if (userId != null) {
-            builder.claim("nameid", userId)
-        }
+        userId?.let { builder.claim("name", it) }
+
         return builder.compact()
     }
 }
