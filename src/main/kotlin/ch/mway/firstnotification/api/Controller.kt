@@ -83,9 +83,8 @@ class Controller(private val restTemplate: RestTemplate) {
             .setAudience(audience)
             .setIssuedAt(now)
             .setExpiration(exp)
+            .setSubject(userId)
             .signWith(signingKey)
-
-        userId?.let { builder.claim("name", it) }
 
         return builder.compact()
     }
