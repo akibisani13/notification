@@ -7,10 +7,7 @@ import io.jsonwebtoken.JwtBuilder
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.http.*
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.RestTemplate
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -18,6 +15,10 @@ import javax.crypto.spec.SecretKeySpec
 
 
 @RestController
+@CrossOrigin(origins = [
+    "http://localhost:4200",
+    "http://localhost:61219"
+])
 class Controller(private val restTemplate: RestTemplate) {
     companion object {
         const val SIGNALR_SERVICE_BASE_ENDPOINT = "https://mwaytrial.service.signalr.net"
